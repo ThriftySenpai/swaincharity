@@ -36,22 +36,40 @@
             margin-bottom: 30px;
         }
 
+        /* Top Bar for Refresh Info and Controls */
+        .top-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            margin-bottom: 20px;
+        }
+        
+        #refresh-status {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
         .controls {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 30px;
+            gap: 20px;
             padding: 15px;
             background-color: var(--header-bg);
             border-radius: 8px;
+            flex-wrap: wrap; /* Allows controls to wrap on smaller screens */
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .controls label {
             font-size: 1.1em;
-            margin-right: 15px;
         }
 
-        #filter-select {
+        #filter-select, #text-filter {
             padding: 10px 15px;
             border-radius: 5px;
             border: 1px solid var(--available-color);
@@ -59,6 +77,7 @@
             color: var(--text-color);
             font-size: 1em;
             cursor: pointer;
+            min-width: 150px;
         }
 
         /* Champion List Grid */
@@ -109,19 +128,31 @@
             text-align: center;
             font-size: 1.5em;
             padding: 50px;
+            grid-column: 1 / -1; /* Centers the message in the grid */
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>⚔️ LoL Tournament Ban Status</h1>
+        <h1>🤡 Swain Charity Tournament Ban Status 🤡</h1>
+        
+        <div class="top-info">
+            <div id="refresh-status"></div>
+        </div>
+
         <div class="controls">
-            <label for="filter-select">Filter by Status:</label>
-            <select id="filter-select">
-                <option value="All">All Champions</option>
-                <option value="Available">Available</option>
-                <option value="Banned">Banned</option>
-            </select>
+            <div class="control-group">
+                <label for="filter-select">Filter Status:</label>
+                <select id="filter-select">
+                    <option value="All">All Champions</option>
+                    <option value="Available">Available</option>
+                    <option value="Banned">Banned</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="text-filter">Search Name:</label>
+                <input type="text" id="text-filter" placeholder="Type Champion Name...">
+            </div>
         </div>
 
         <div id="champion-list" class="loading-message">
@@ -130,7 +161,6 @@
     </div>
 
     <script>
-        // 🚨 IMPORTANT: Replace the placeholder below with your actual Google Sheet URL.
         const SPREADSHEET_ID = 'e/2PACX-1vQJ8422w9uVjUOHlrr0AZAHD0eNts8REfeL42SiKuw2Qwkjgv75_8gSh4WSprY_GpEGHInJqDdiDtP2'; 
         // 0 is typically the first sheet (BanData), but check your URL
         const SHEET_GID = '688926347'; 
@@ -138,13 +168,16 @@
         // This URL fetches the data from your published sheet in a plain CSV format.
         const GOOGLE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQJ8422w9uVjUOHlrr0AZAHD0eNts8REfeL42SiKuw2Qwkjgv75_8gSh4WSprY_GpEGHInJqDdiDtP2/pub?gid=688926347&single=true&output=csv';// `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&gid=${SHEET_GID}`;
 
+        const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes in milliseconds
+
         const championListElement = document.getElementById('champion-list');
         const filterSelect = document.getElementById('filter-select');
+        const textFilter = document.getElementById('text-filter');
+        const refreshStatusElement = document.getElementById('refresh-status');
         let championData = []; // To store the parsed data
 
-        /**
-         * Step 1: Fetch Data from Google Sheet
-         */
+        // --- Data Fetching and Parsing ---
+
         async function fetchData() {
             try {
                 const response = await fetch(GOOGLE_SHEET_URL);
@@ -152,28 +185,27 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const csvText = await response.text();
+                
+                // Update last refresh time after successful fetch (not after the reload)
+                const now = new Date();
+                const timeString = now.toLocaleTimeString();
+                refreshStatusElement.innerHTML = `Last Updated: **${timeString}** (Auto-reloads in 5 min)`;
+
                 championData = parseData(csvText);
-                renderList(championData, filterSelect.value);
+                applyFilters();
             } catch (error) {
                 championListElement.innerHTML = `<div class="loading-message" style="color: red;">
-                    ❌ Error loading data. Please check your **SPREADSHEET_ID**, **SHEET_GID**, and ensure the Google Sheet is published to the web.
+                    ❌ Error loading data. Please check your **SPREADSHEET_ID** and ensure the Google Sheet is published to the web.
                 </div>`;
                 console.error("Fetch error:", error);
             }
         }
 
-        /**
-         * Step 2: Parse the CSV Data
-         * Assumes Champion Name in Column 1 (A) and Status in Column 3 (C) (as set up in the previous step)
-         */
         function parseData(csvText) {
-            // Split into rows and skip the header row (index 0)
             const rows = csvText.split('\n').slice(1); 
             const parsedData = rows.map(row => {
-                // Simple CSV parsing: split by comma, handling potential quotes if needed
                 const columns = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 
-                // Columns are: A (Champion), B (Boolean), C (Status)
                 const name = columns[0] ? columns[0].replace(/"/g, '').trim() : '';
                 const status = columns[2] ? columns[2].replace(/"/g, '').trim() : '';
 
@@ -186,54 +218,58 @@
             return parsedData.sort((a, b) => a.name.localeCompare(b.name));
         }
 
-        /**
-         * Step 3: Render the List
-         */
-        function renderList(data, filter) {
-            championListElement.innerHTML = '';
+        // --- Filtering and Rendering ---
+        function applyFilters() {
+            const statusFilter = filterSelect.value;
+            const nameFilter = textFilter.value.toLowerCase().trim();
             
-            const filteredData = data.filter(champion => {
-                if (filter === 'All') {
-                    return true;
-                }
-                return champion.status === filter;
+            const filteredData = championData.filter(champion => {
+                // 1. Status Filter
+                const statusMatch = (statusFilter === 'All' || champion.status === statusFilter);
+                
+                // 2. Text (Name) Filter
+                const nameMatch = champion.name.toLowerCase().includes(nameFilter);
+
+                return statusMatch && nameMatch;
             });
 
-            if (filteredData.length === 0) {
-                championListElement.innerHTML = `<div class="loading-message">No champions match the current filter: **${filter}**</div>`;
+            renderList(filteredData);
+        }
+
+        function renderList(data) {
+            championListElement.innerHTML = '';
+            
+            if (data.length === 0) {
+                championListElement.innerHTML = `<div class="loading-message">No champions match the current filters.</div>`;
                 return;
             }
 
-            championListElement.style.display = 'grid'; // Switch back from loading message
+            championListElement.style.display = 'grid';
 
-            filteredData.forEach(champion => {
+            data.forEach(champion => {
                 const card = document.createElement('div');
                 card.classList.add('champion-card');
                 
-                // Add an optional image (using a public LoL champion icon service for flair)
-                const safeName = champion.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-
+                const imageURL = `https://ddragon.leagueoflegends.com/cdn/15.21.1/img/champion/${champion.name.replace(/[^A-Za-z0-9]/g, '')}.png`;
+                const borderColor = champion.status === 'Banned' ? 'red' : 'green';
                 card.innerHTML = `
                     <div class="champion-name">${champion.name}</div>
-                    <img src="https://ddragon.leagueoflegends.com/cdn/15.21.1/img/champion/${champion.name.replace(/[^A-Za-z0-9]/g, '')}.png" 
+                    <img src="${imageURL}" 
                          alt="${champion.name} Icon" 
                          onerror="this.onerror=null;this.style.display='none';"
-                         style="width: 80px; height: 80px; border-radius: 50%; margin: 10px 0; border: 3px solid ${champion.status === 'Banned' ? 'red' : 'green'};">
+                         style="width: 80px; height: 80px; border-radius: 50%; margin: 10px 0; border: 3px solid ${borderColor};">
                     <div class="champion-status status-${champion.status}">${champion.status}</div>
                 `;
                 championListElement.appendChild(card);
             });
         }
 
-        // Event Listener for the Filter Dropdown
-        filterSelect.addEventListener('change', () => {
-            renderList(championData, filterSelect.value);
-        });
+        filterSelect.addEventListener('change', applyFilters);
+        textFilter.addEventListener('input', applyFilters);
 
-        // Initial Data Load
+        // Auto-refresh logic (fetches data, doesn't reload the entire page)
+        setInterval(fetchData, REFRESH_INTERVAL_MS);
         fetchData();
     </script>
 </body>
-
 </html>
-
