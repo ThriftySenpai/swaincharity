@@ -23,7 +23,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -256,8 +256,7 @@
                 {
                 	imageURL = `https://ddragon.leagueoflegends.com/cdn/15.21.1/img/champion/MonkeyKing.png`;
                 }
-
-                const borderColor = champion.status === 'Banned' ? 'red' : 'green';
+				
                 card.innerHTML = `
                     <div class="champion-name">${champion.name}</div>
                     <img src="${imageURL}" 
@@ -279,4 +278,5 @@
     </script>
 </body>
 </html>
+
 
