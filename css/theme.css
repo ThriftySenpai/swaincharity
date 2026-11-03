@@ -1,0 +1,129 @@
+/*
+ * Design tokens sampled from the 2026 stream assets:
+ *   2026/bcl-2026-blank-screen.png   hobbit door teal, ochre walls, Shire haze
+ *   2026/bcl-title-logo-2026.png     #FFFDEF cream uncial wordmark
+ *   2026/bcl-2026-overlay.png        #FFE780 accent gold (the !donate call-out)
+ *   2026/swain-pika-frodo.png        Frodo-Pikachu: cloak green, mascot yellow
+ *
+ * The accent gold is the one colour confirmed twice independently — it is both
+ * the !donate text on the overlay and the twitch.tv/SwainBL URL on the main
+ * screen — so it is what the eye reads as "the brand colour" on stream.
+ */
+:root {
+  /* Brand */
+  --bcl-cream: #fffdef;
+  --bcl-gold: #ffe780;
+  --bcl-gold-bright: #fff3bd;
+  --bcl-gold-deep: #c9a227;
+
+  /* The round green door, lightest to darkest */
+  --bcl-door: #245d3e;
+  --bcl-door-mid: #1d3b31;
+  --bcl-door-dark: #102316;
+  --bcl-deep: #0a1710;
+
+  /* The Shire through the window */
+  --bcl-moss: #707e07;
+  --bcl-mist: #6c8977;
+  --bcl-cloak: #128b4b;
+
+  /* Earth: the ochre wall and the terracotta floor tiles */
+  --bcl-earth: #38301e;
+  --bcl-clay: #8a4f2e;
+
+  /* Semantic */
+  --bg: var(--bcl-deep);
+  --bg-elevated: rgba(255, 253, 239, 0.05);
+  --bg-card: rgba(12, 32, 22, 0.76);
+  --surface-border: rgba(255, 231, 128, 0.2);
+  --text: var(--bcl-cream);
+  --text-muted: rgba(255, 253, 239, 0.68);
+  --text-faint: rgba(255, 253, 239, 0.44);
+  --accent: var(--bcl-gold);
+  --accent-contrast: #1a1203;
+  --track: rgba(255, 253, 239, 0.14);
+  --danger: #ef9a7a;
+
+  --radius: 14px;
+  --radius-sm: 9px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+
+  /*
+   * Uncial Antiqua is the closest free match to the hand-lettered wordmark, but
+   * it is a single decorative weight, so it is used only where type is large:
+   * headings, the running total and overlay titles. Alegreya Sans carries
+   * everything that has to stay readable at small sizes, including donor names
+   * and the leaderboard amounts.
+   */
+  --font-display: 'Uncial Antiqua', 'Cinzel', Georgia, 'Times New Roman', serif;
+  --font-body: 'Alegreya Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  /* Money and ranks: the body face at its heaviest, so figures stay scannable
+     and `tabular-nums` actually lines them up. Uncial has no tabular figures. */
+  --font-numeric: 'Alegreya Sans', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, monospace;
+}
+
+/*
+ * The brand is a dark hobbit hole, so light mode stays dark-on-brand rather
+ * than inverting into something that stops looking like the stream. It only
+ * warms and lifts the page background for reading outside a dark room.
+ */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme='dark']) {
+    --bg: #14281c;
+    --bg-card: rgba(10, 26, 18, 0.8);
+  }
+}
+
+:root[data-theme='light'] {
+  --bg: #14281c;
+  --bg-card: rgba(10, 26, 18, 0.8);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+a {
+  color: var(--accent);
+}
+
+:where(a, button, input, select, [tabindex]):focus-visible {
+  outline: 3px solid var(--bcl-gold);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
