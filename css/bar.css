@@ -1,0 +1,238 @@
+/*
+ * Bottom-bar donation tracker (bar.html).
+ *
+ * Built for the strip of 2026/bcl-2026-overlay.png right of the Extra Life
+ * logo: 1480 x 106 at X 430, Y 974. That part of the bar shows the busy
+ * floor tiles and round window, so the tracker carries its own dark plaque
+ * rather than printing text straight onto the art.
+ *
+ * Everything is sized in rem, and the root size is whichever of the viewport's
+ * width or height is tighter, so the bar keeps its 1480 x 106 shape at any
+ * source size — and in an ordinary browser tab, where it sits along the top.
+ */
+html {
+  /* 16px at the intended 1480 x 106 source. */
+  font-size: min(calc(100vh / 6.625), calc(100vw / 92.5));
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+body.bar {
+  font-family: var(--font-body);
+  color: var(--bcl-cream);
+  line-height: 1.1;
+  padding: 0.45rem 0.6rem;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+body.bar[data-chroma='true'] {
+  text-shadow: none;
+}
+
+.bar__panel {
+  /* The full 6.625rem source height, less the body's vertical padding. */
+  height: 5.725rem;
+  display: flex;
+  align-items: center;
+  gap: 1.4rem;
+  padding: 0 1.4rem;
+  border-radius: 0.7rem;
+  border: 1px solid rgba(255, 231, 128, 0.42);
+  background:
+    linear-gradient(180deg, rgba(36, 93, 62, 0.55), rgba(16, 35, 22, 0) 70%),
+    rgba(10, 23, 16, 0.86);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 253, 239, 0.08),
+    0 0.25rem 0.9rem rgba(0, 0, 0, 0.55);
+}
+
+/* -------------------------------------------------------------- progress */
+
+.bar__progress {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.bar__figures {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar__label {
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 253, 239, 0.72);
+}
+
+.bar__raised {
+  font-family: var(--font-numeric);
+  font-size: 2.15rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--bcl-gold);
+  display: inline-block;
+  transform-origin: left 70%;
+}
+
+.bar__raised.is-bumped {
+  animation: bump 1.6s ease-out;
+}
+
+.bar__goal {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255, 253, 239, 0.88);
+}
+
+.bar__pct {
+  margin-left: auto;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--bcl-cream);
+}
+
+.bar__track {
+  position: relative;
+  height: 1.15rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 231, 128, 0.55);
+  overflow: hidden;
+}
+
+.bar__fill {
+  position: relative;
+  height: 100%;
+  width: 0;
+  min-width: 0.4rem;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--bcl-cloak), var(--bcl-gold));
+  transition: width 1200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* A soft highlight along the top edge so the fill reads as a filled tube
+   rather than a flat block. */
+.bar__fill::after {
+  content: '';
+  position: absolute;
+  inset: 12% 0.3rem auto;
+  height: 32%;
+  border-radius: 999px;
+  background: rgba(255, 253, 239, 0.35);
+}
+
+/* ------------------------------------------------------------- incentive */
+
+.bar__incentive {
+  flex: 0 1 auto;
+  max-width: 48%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.22rem;
+  padding-left: 1.4rem;
+  border-left: 2px solid rgba(255, 231, 128, 0.4);
+  align-self: stretch;
+}
+
+.bar__incentive[hidden],
+.bar__leader[hidden] {
+  display: none;
+}
+
+.bar__kicker {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--bcl-gold);
+}
+
+.bar__reward {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.bar__reward-title {
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--bcl-cream);
+}
+
+.bar__reward-title:not(:empty)::after {
+  content: ' wins';
+  font-weight: 500;
+  color: rgba(255, 253, 239, 0.75);
+}
+
+/* The reward is the one thing on the bar large enough for the display face. */
+.bar__reward-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  color: var(--bcl-gold);
+}
+
+.bar__leader {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(255, 253, 239, 0.82);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bar__leader strong {
+  font-weight: 800;
+  color: var(--bcl-cream);
+}
+
+.bar__leader-amount {
+  font-weight: 800;
+  color: var(--bcl-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- errors */
+
+/* Only shown when the very first load fails; after that a failed poll keeps
+   the last good figures on screen rather than blanking the bar mid-stream. */
+.bar__error {
+  position: fixed;
+  right: 1.4rem;
+  bottom: 0.2rem;
+  font-size: 0.7rem;
+  color: var(--danger);
+}
+
+.bar__error[hidden] {
+  display: none;
+}
+
+@keyframes bump {
+  0% { transform: scale(1); text-shadow: 0 0 0 rgba(255, 231, 128, 0); }
+  18% { transform: scale(1.12); text-shadow: 0 0 1rem rgba(255, 231, 128, 0.95); }
+  100% { transform: scale(1); text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9); }
+}

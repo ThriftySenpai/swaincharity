@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BCL Donation Bar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Uncial+Antiqua&display=swap">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/bar.css">
+</head>
+<body class="bar">
+<!--
+  Bottom-bar donation tracker for 2026/bcl-2026-overlay.png.
+
+  In OBS add a Browser source pointing at bar.html, size it 1480 x 106, and
+  place it at X 430, Y 974 — directly right of the Extra Life logo, filling
+  the rest of the bottom bar. Everything scales off the source height, so a
+  shorter or narrower source still lays out cleanly.
+
+  The day's incentive is set in js/config.js under `donationBar`. Extras:
+    &day=2          force a day instead of picking it from the clock
+    &chroma=00b140  solid key colour instead of transparency
+-->
+<main class="bar__panel" id="root">
+  <section class="bar__progress" aria-label="Fundraising progress">
+    <div class="bar__figures">
+      <span class="bar__label">Raised</span>
+      <span class="bar__raised" id="raised">$0</span>
+      <span class="bar__goal" id="goal"></span>
+      <span class="bar__pct" id="pct"></span>
+    </div>
+    <div class="bar__track"><div class="bar__fill" id="fill"></div></div>
+  </section>
+
+  <section class="bar__incentive" id="incentive" hidden aria-label="Today's donation incentive">
+    <div class="bar__kicker" id="kicker"></div>
+    <div class="bar__reward">
+      <span class="bar__reward-title" id="incentive-title"></span>
+      <span class="bar__reward-name" id="reward"></span>
+    </div>
+    <div class="bar__leader" id="leader" hidden></div>
+  </section>
+</main>
+<div class="bar__error" id="error" hidden></div>
+<script type="module" src="js/bar.js"></script>
+</body>
+</html>
