@@ -2,17 +2,18 @@
  * Bottom-bar donation tracker (bar.html).
  *
  * Built for the strip of 2026/bcl-2026-overlay.png right of the Extra Life
- * logo: 1480 x 106 at X 430, Y 974. That part of the bar shows the busy
- * floor tiles and round window, so the tracker carries its own dark plaque
- * rather than printing text straight onto the art.
+ * logo: 900 x 106 at X 430, Y 974, which leaves the round window at the right
+ * of the bar clear. That part of the bar shows busy floor tiles, so the
+ * tracker carries its own dark plaque rather than printing text straight
+ * onto the art.
  *
  * Everything is sized in rem, and the root size is whichever of the viewport's
- * width or height is tighter, so the bar keeps its 1480 x 106 shape at any
+ * width or height is tighter, so the bar keeps its 900 x 106 shape at any
  * source size — and in an ordinary browser tab, where it sits along the top.
  */
 html {
-  /* 16px at the intended 1480 x 106 source. */
-  font-size: min(calc(100vh / 6.625), calc(100vw / 92.5));
+  /* 16px at the intended 900 x 106 source. */
+  font-size: min(calc(100vh / 6.625), calc(100vw / 56.25));
 }
 
 html,
@@ -55,12 +56,18 @@ body.bar[data-chroma='true'] {
 
 /* -------------------------------------------------------------- progress */
 
+/* A fixed width so the incentive gets the rest. When a day has no incentive
+   bar.js adds --solo and the progress takes the whole panel. */
 .bar__progress {
-  flex: 1 1 0;
+  flex: 0 0 24.8rem;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.45rem;
+}
+
+.bar__panel--solo .bar__progress {
+  flex: 1 1 0;
 }
 
 .bar__figures {
@@ -94,19 +101,32 @@ body.bar[data-chroma='true'] {
 }
 
 .bar__goal {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 1.1rem;
   font-weight: 700;
   color: rgba(255, 253, 239, 0.88);
 }
 
+/* The percentage rides at the end of the track rather than on the figures
+   line, which is too narrow to hold it beside a five-figure total. */
+.bar__meter {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
 .bar__pct {
-  margin-left: auto;
-  font-size: 1.1rem;
+  flex-shrink: 0;
+  font-size: 1rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   color: var(--bcl-cream);
 }
 
 .bar__track {
+  flex: 1 1 auto;
   position: relative;
   height: 1.15rem;
   border-radius: 999px;
@@ -139,8 +159,7 @@ body.bar[data-chroma='true'] {
 /* ------------------------------------------------------------- incentive */
 
 .bar__incentive {
-  flex: 0 1 auto;
-  max-width: 48%;
+  flex: 1 1 0;
   min-width: 0;
   display: flex;
   flex-direction: column;

@@ -1,8 +1,9 @@
 /**
  * The knob file. Almost everything an organizer needs to change lives here.
  *
- * Every value can also be overridden from the query string for quick testing,
- * e.g. index.html?scope=teams&id=73266 — see applyUrlOverrides() at the bottom.
+ * For quick testing, `scope`, `id` and `eventId` can be overridden from the
+ * query string, e.g. index.html?scope=teams&id=73266. Nothing else can — see
+ * applyUrlOverrides() at the bottom.
  */
 export const CONFIG = {
   // ---- Extra Life -------------------------------------------------------
@@ -140,16 +141,25 @@ export const CONFIG = {
   },
 };
 
-const NUMERIC_KEYS = new Set(['id', 'eventId', 'leaderboardSize']);
+/*
+ * The only settings a URL may change, each with a validator that returns the
+ * parsed value or null to ignore it. Keep this list short: the site is public,
+ * so an open override would let anyone send a link to this domain that loads
+ * fake totals from their own server (`apiBase`) or points the Donate button at
+ * a scam page (`donateUrl`).
+ */
+const URL_OVERRIDES = {
+  scope: (value) => (value === 'teams' || value === 'participants' ? value : null),
+  id: (value) => (/^\d+$/.test(value) ? Number(value) : null),
+  eventId: (value) => (/^\d+$/.test(value) ? Number(value) : null),
+};
 
 export function applyUrlOverrides(search = window.location.search) {
   const params = new URLSearchParams(search);
-  for (const [key, value] of params) {
-    if (key === 'sheetId') { CONFIG.sheet.id = value; continue; }
-    if (key === 'apiKey') { CONFIG.sheet.apiKey = value; continue; }
-    if (!(key in CONFIG)) continue;
-    if (typeof CONFIG[key] === 'object') continue;
-    CONFIG[key] = NUMERIC_KEYS.has(key) ? Number(value) : value;
+  for (const [key, parse] of Object.entries(URL_OVERRIDES)) {
+    if (!params.has(key)) continue;
+    const value = parse(params.get(key));
+    if (value !== null) CONFIG[key] = value;
   }
   return CONFIG;
 }

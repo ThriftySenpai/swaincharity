@@ -67,6 +67,7 @@ function renderProgress(profile) {
 function renderIncentive(entry, donations) {
   const section = $('incentive');
   section.hidden = !entry?.reward;
+  $('root').classList.toggle('bar__panel--solo', section.hidden);
   if (section.hidden) return;
 
   $('kicker').textContent = `Day ${entry.day} Incentive`;

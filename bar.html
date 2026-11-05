@@ -14,10 +14,10 @@
 <!--
   Bottom-bar donation tracker for 2026/bcl-2026-overlay.png.
 
-  In OBS add a Browser source pointing at bar.html, size it 1480 x 106, and
-  place it at X 430, Y 974 — directly right of the Extra Life logo, filling
-  the rest of the bottom bar. Everything scales off the source height, so a
-  shorter or narrower source still lays out cleanly.
+  In OBS add a Browser source pointing at bar.html, size it 900 x 106, and
+  place it at X 430, Y 974 — directly right of the Extra Life logo, leaving
+  the round window at the right of the bar clear. Everything scales to fit
+  the source, so a smaller source keeps the same layout.
 
   The day's incentive is set in js/config.js under `donationBar`. Extras:
     &day=2          force a day instead of picking it from the clock
@@ -29,9 +29,11 @@
       <span class="bar__label">Raised</span>
       <span class="bar__raised" id="raised">$0</span>
       <span class="bar__goal" id="goal"></span>
+    </div>
+    <div class="bar__meter">
+      <div class="bar__track"><div class="bar__fill" id="fill"></div></div>
       <span class="bar__pct" id="pct"></span>
     </div>
-    <div class="bar__track"><div class="bar__fill" id="fill"></div></div>
   </section>
 
   <section class="bar__incentive" id="incentive" hidden aria-label="Today's donation incentive">
