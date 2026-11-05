@@ -1,0 +1,73 @@
+/*
+ * Between-games slideshow (slides.html).
+ *
+ * The stage is laid out at the art's native 1920 x 1080 and scaled to fit the
+ * source, so the plate text is positioned in the same pixels as the image.
+ */
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+.stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  /* --scale is set from js/slides.js; OBS's Chromium can't divide lengths. */
+  transform: translate(-50%, -50%) scale(var(--scale, 1));
+  transform-origin: center;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity var(--fade, 900ms) ease-in-out;
+}
+
+.slide.is-active {
+  opacity: 1;
+}
+
+.slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * The blank area of the plate in top-donor-license-plate-blank.png sits
+ * between the blue rule (y 345) and "America's Dairyland" (y 790), and
+ * between the plate's edges (x 225 to 1695).
+ */
+.plate {
+  position: absolute;
+  left: 225px;
+  width: 1470px;
+  top: 350px;
+  height: 435px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plate__text {
+  font-family: var(--plate-font, 'Oswald'), 'Oswald', 'Arial Narrow', sans-serif;
+  font-weight: 500;
+  font-size: 340px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  white-space: pre;
+  text-transform: uppercase;
+  color: #1d2a5c;
+  /* Stamped metal: a lit top edge and a soft shadow under each stroke. */
+  text-shadow:
+    -2px -2px 0 rgba(255, 255, 255, 0.85),
+    3px 4px 0 rgba(12, 18, 44, 0.35),
+    5px 8px 10px rgba(0, 0, 0, 0.18);
+}

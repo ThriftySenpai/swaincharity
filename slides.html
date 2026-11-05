@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BCL Slideshow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=block">
+<link rel="stylesheet" href="css/slides.css">
+</head>
+<body>
+<!--
+  Between-games slideshow. In OBS add a Browser source pointing at
+  slides.html, size it 1920 x 1080. Any other 16:9 size scales to fit.
+
+  Slides, timing and the license-plate sheet are set in js/config.js under
+  `slideshow`. Extras for testing:
+    ?day=fri        pretend it is Friday (sun/sat or 0-6 also work)
+    ?seconds=3      faster rotation
+    ?start=plate    begin on the first slide whose file name contains "plate"
+-->
+<main class="stage" id="stage" aria-live="off"></main>
+<script type="module" src="js/slides.js"></script>
+</body>
+</html>

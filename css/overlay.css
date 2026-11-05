@@ -1,0 +1,239 @@
+/*
+ * OBS browser-source views.
+ *
+ * The background is transparent by default so the overlay composites straight
+ * onto gameplay. Pass &chroma=00b140 to get a solid key colour instead, for
+ * setups that would rather key it than rely on browser-source alpha.
+ *
+ * Everything is sized in em off :root font-size, which overlay.js sets from
+ * the &scale= parameter, so one stylesheet serves a 400px corner widget and a
+ * full-screen 1920x1080 source.
+ */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  overflow: hidden;
+}
+
+body.overlay {
+  font-family: var(--font-body);
+  color: var(--bcl-cream);
+  padding: 0.6em;
+  /* Gameplay behind the overlay can be any colour, so every piece of text
+     gets a hard outline rather than relying on contrast with a background. */
+  text-shadow:
+    0 0 4px rgba(0, 0, 0, 0.95),
+    0 2px 5px rgba(0, 0, 0, 0.85);
+}
+
+body.overlay[data-chroma='true'] {
+  text-shadow: none;
+}
+
+.ov {
+  display: flex;
+  flex-direction: column;
+  gap: 0.34em;
+}
+
+.ov__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.12em;
+  letter-spacing: 0.01em;
+  color: var(--bcl-gold);
+  text-transform: uppercase;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.6em;
+}
+
+/* The window label ("Friday Night", "All time") has to be read at a glance on
+   a stream, and the uncial face is too ambiguous at this size, so it drops
+   back to the body font rather than inheriting the title's. */
+.ov__subtitle {
+  font-family: var(--font-body);
+  font-size: 0.78em;
+  font-weight: 700;
+  color: rgba(255, 253, 239, 0.82);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* --------------------------------------------------------------- top 5 */
+
+.ov-board {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.26em;
+}
+
+.ov-row {
+  display: grid;
+  grid-template-columns: 1.5em 1fr auto;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.24em 0.5em;
+  border-radius: 0.4em;
+  background: rgba(10, 23, 16, 0.66);
+  border-left: 0.2em solid transparent;
+  font-size: 1.05em;
+}
+
+body.overlay[data-chroma='true'] .ov-row {
+  background: rgba(10, 23, 16, 0.94);
+}
+
+.ov-row--1 {
+  border-left-color: var(--bcl-gold);
+  background: rgba(255, 231, 128, 0.22);
+}
+
+.ov-row__rank {
+  font-family: var(--font-numeric);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--bcl-gold);
+  text-align: center;
+}
+
+.ov-row__name {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ov-row__amount {
+  font-family: var(--font-numeric);
+  font-weight: 800;
+  color: var(--bcl-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-row__count {
+  font-size: 0.68em;
+  font-weight: 400;
+  color: rgba(255, 253, 239, 0.7);
+  margin-left: 0.35em;
+}
+
+/* ---------------------------------------------------------------- total */
+
+.ov-total {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 2.8em;
+  line-height: 1;
+  color: var(--bcl-gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-total__goal {
+  font-size: 0.85em;
+  font-weight: 700;
+  color: rgba(255, 253, 239, 0.85);
+}
+
+.ov-progress {
+  height: 0.5em;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  border: 1px solid rgba(255, 231, 128, 0.5);
+}
+
+.ov-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--bcl-cloak), var(--bcl-gold));
+  transition: width 900ms ease;
+  min-width: 2px;
+}
+
+/* ------------------------------------------------------------- incentive */
+
+.ov-incentive__figures {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-bidwar {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+.ov-bidwar__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6em;
+  font-size: 0.95em;
+  font-weight: 700;
+  margin-bottom: 0.15em;
+}
+
+.ov-bidwar__row--1 .ov-bidwar__head {
+  color: var(--bcl-gold);
+}
+
+/* ---------------------------------------------------------------- ticker */
+
+.ov-ticker {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.ov-ticker__row {
+  padding: 0.3em 0.6em;
+  border-radius: 0.4em;
+  background: rgba(10, 23, 16, 0.66);
+  border-left: 0.2em solid var(--bcl-gold);
+  animation: slide-in 420ms ease both;
+}
+
+.ov-ticker__name {
+  font-weight: 800;
+  color: var(--bcl-gold);
+}
+
+.ov-ticker__msg {
+  display: block;
+  font-size: 0.8em;
+  color: rgba(255, 253, 239, 0.85);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: none; }
+}
+
+.ov-empty {
+  font-size: 0.85em;
+  color: rgba(255, 253, 239, 0.6);
+  padding: 0.4em 0.2em;
+}
+
+.ov-error {
+  font-size: 0.8em;
+  color: #ef9a7a;
+  padding: 0.4em 0.2em;
+}

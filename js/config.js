@@ -61,6 +61,46 @@ export const CONFIG = {
     ],
   },
 
+  // ---- Between-games slideshow (slides.html) ----------------------------
+  // Full-screen OBS source that rotates through assets/img/Slides. Browsers
+  // can't list a folder, so every slide is named here, in the order shown.
+  //
+  // `days` limits a slide to certain stream days (0 = Sun ... 5 = Fri,
+  // 6 = Sat). A stream day runs until `dayRolloverHour` the next morning, so
+  // Friday's schedule stays up through a stream that runs past midnight.
+  // Leave `days` off to show a slide every day. Force a day for testing with
+  // slides.html?day=fri.
+  slideshow: {
+    folder: 'assets/img/Slides/',
+    seconds: 10,
+    fadeMs: 900,
+    dayRolloverHour: 2,
+    slides: [
+      { file: 'bcl-2026-main-screen.png' },
+      { file: 'bcl-2026-weekend-schedule.png' },
+      { file: 'bcl-2026-fri-schedule.png', days: [5] },
+      { file: 'bcl-2026-sat-schedule.png', days: [6] },
+      { file: 'bcl-2026-sun-schedule.png', days: [0] },
+      { file: 'bcl-2026-saturday.png', days: [6] },
+      { file: 'bcl-2026-saturday_bidwar-pick.png', days: [6] },
+      { file: 'bcl-2026-saturday_bidwar-party.png', days: [6] },
+      { file: 'top-donor-license-plate-blank.png', plate: true },
+    ],
+
+    // The plate text is read live from a link-shared Google Sheet through the
+    // gviz CSV endpoint, which needs no API key. Note the text sits in B1:
+    // A1 holds the "Driver's License Text:" label.
+    plate: {
+      sheetId: '1-jwagBKevlwJJVNBjQ16ZUn_as6ZUqvctSy_cACHsrY',
+      tab: 'LiveSources',
+      cell: 'B1',
+      refreshSeconds: 30,
+      // A license-plate font file to use instead of the Oswald stand-in,
+      // e.g. 'assets/fonts/license-plate.ttf'. Blank uses Oswald.
+      font: '',
+    },
+  },
+
   // ---- Polling ----------------------------------------------------------
   // Extra Life asks for no more than one request every 15s. We stay well
   // inside that by caching aggressively and only fetching new pages, but the
