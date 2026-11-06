@@ -171,7 +171,9 @@ body.bar[data-chroma='true'] {
 }
 
 .bar__incentive[hidden],
-.bar__leader[hidden] {
+.bar__reward[hidden],
+.bar__leader[hidden],
+.bar__bidwars[hidden] {
   display: none;
 }
 
@@ -232,6 +234,49 @@ body.bar[data-chroma='true'] {
   font-weight: 800;
   color: var(--bcl-gold);
   font-variant-numeric: tabular-nums;
+}
+
+/* --------------------------------------------------------------- bid wars */
+
+/* One row per bid war: short label, current leader, amount. A grid so the
+   leader names line up whatever the labels' lengths. */
+.bar__bidwars {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 0.65rem;
+  row-gap: 0.12rem;
+}
+
+.bar__war-label {
+  font-size: 0.9rem;
+  font-weight: 800;
+  white-space: nowrap;
+  color: rgba(255, 253, 239, 0.75);
+}
+
+.bar__war-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--bcl-gold);
+}
+
+.bar__war-name--empty {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: rgba(255, 253, 239, 0.75);
+}
+
+.bar__war-amount {
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--bcl-cream);
 }
 
 /* ---------------------------------------------------------------- errors */

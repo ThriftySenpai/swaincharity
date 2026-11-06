@@ -475,6 +475,10 @@ section + section {
   margin-bottom: 14px;
 }
 
+[data-vote-link][hidden] {
+  display: none;
+}
+
 .field > span {
   display: block;
   font-weight: 700;

@@ -19,7 +19,9 @@
   the round window at the right of the bar clear. Everything scales to fit
   the source, so a smaller source keeps the same layout.
 
-  The day's incentive is set in js/config.js under `donationBar`. Extras:
+  The day's incentive is set in js/config.js under `donationBar`: a fixed
+  reward, or `bidwars` to show who is leading each bid war in the sheet.
+  Extras:
     &day=2          force a day instead of picking it from the clock
     &chroma=00b140  solid key colour instead of transparency
 -->
@@ -38,11 +40,12 @@
 
   <section class="bar__incentive" id="incentive" hidden aria-label="Today's donation incentive">
     <div class="bar__kicker" id="kicker"></div>
-    <div class="bar__reward">
+    <div class="bar__reward" id="reward-row">
       <span class="bar__reward-title" id="incentive-title"></span>
       <span class="bar__reward-name" id="reward"></span>
     </div>
     <div class="bar__leader" id="leader" hidden></div>
+    <div class="bar__bidwars" id="bidwars" hidden></div>
   </section>
 </main>
 <div class="bar__error" id="error" hidden></div>

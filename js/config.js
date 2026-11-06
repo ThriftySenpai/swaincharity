@@ -55,9 +55,19 @@ export const CONFIG = {
     //
     // `leader: true` shows who is currently top donor inside that day's
     // window, for "Top Donor wins..." style incentives.
+    //
+    // `bidwars` instead shows who is leading each listed bid war, read from
+    // the incentives Google Sheet. `id` is the bid war's id in the
+    // `Incentives` tab; `label` is the short name shown on the bar.
     incentives: [
       { day: 1, window: 'friday-night', title: 'Top Donor', reward: "Cruz's License Plate", leader: true },
-      { day: 2, window: 'saturday',     title: '',          reward: '',                     leader: false },
+      {
+        day: 2, window: 'saturday',
+        bidwars: [
+          { id: 'party',  label: 'Party Game' },
+          { id: 'league', label: 'Baddie League' },
+        ],
+      },
       { day: 3, window: 'sunday',       title: '',          reward: '',                     leader: false },
     ],
   },
@@ -108,36 +118,55 @@ export const CONFIG = {
   // burst spacing below is what governs the one-time backfill.
   poll: {
     donationsSeconds: 30,
-    sheetSeconds: 60,
+    sheetSeconds: 30,
     minRequestSpacingMs: 1000,
   },
 
-  // ---- Google Sheet (incentives) ---------------------------------------
-  // Read through the Sheets API v4, which is CORS-clean. Publish-to-web CSV
-  // and Apps Script web apps are not, so don't substitute them.
-  //
-  // Setup: share the sheet "Anyone with the link -> Viewer", then create a
-  // browser API key restricted to (a) the Google Sheets API and (b) an HTTP
-  // referrer of your Pages domain. See README.md.
-  sheet: {
-    id: '',      // e.g. '1AbC...'  — leave blank to disable the incentives UI
-    apiKey: '',  // e.g. 'AIza...'
-    tabs: {
-      incentives:  'Incentives',
-      allocations: 'Allocations',
-      claims:      'Claims',
-      settings:    'Settings',
-    },
-  },
+  // ---- Saturday incentives (one Google Form) ----------------------------
+  // Donors fill in a Form after donating; its responses tab is read through
+  // the gviz CSV endpoint, so no API key is needed — just share the sheet as
+  // "Anyone with the link -> Viewer". See README.md for the Form questions.
+  saturday: {
+    // From the responses sheet's URL: docs.google.com/spreadsheets/d/THIS_PART/edit
+    // Leave blank to switch the incentives off.
+    // It's the same sheet the slideshow's license plate reads.
+    sheetId: '1-jwagBKevlwJJVNBjQ16ZUn_as6ZUqvctSy_cACHsrY',
+    tab: 'DonationIncentiveForm',
+    // The Form's own "Send -> link" URL. The site's Vote buttons open it.
+    formUrl: 'https://forms.gle/4XNP7361sWgzQQ1w9',
+    // Only donations made inside this stream window can match a response.
+    window: 'saturday',
 
-  // ---- Donor self-service claim form -----------------------------------
-  // A Google Form whose responses land in the `Claims` tab. The entry.NNN
-  // ids come from the form's prefill link (see README.md).
-  claimForm: {
-    url: '',
-    // Leave any of these blank and that field simply is not prefilled; the
-    // donor fills it in on the form instead.
-    entries: { donationId: '', donorName: '', amount: '', incentiveId: '' },
+    // Each column is found by a word in its header (case does not matter),
+    // so the Form questions can be worded freely as long as each contains its
+    // word. `approved` is a checkbox column mods add to the responses tab.
+    // `incentive` is the optional "Which Incentive?" question: when its answer
+    // names one incentive (by that incentive's `choice` words), the response
+    // counts toward that one only.
+    columns: {
+      name: 'name',
+      amount: 'amount',
+      incentive: 'incentive',
+      party: 'party',
+      league: 'league',
+      approved: 'approved',
+    },
+
+    party: {
+      id: 'party',
+      title: 'Pick a Party Game',
+      choice: ['party'],
+      // `match` is extra words that count as a vote, on top of the title.
+      options: [
+        { id: 'party-hk',      title: 'Hello Kitty Party Land', match: ['hello kitty', 'kitty', 'hk'] },
+        { id: 'party-machine', title: 'Machine Party',          match: ['machine'] },
+      ],
+    },
+    league: {
+      id: 'league',
+      title: 'Pick a Baddie League',
+      choice: ['league', 'baddy', 'baddie'],
+    },
   },
 };
 

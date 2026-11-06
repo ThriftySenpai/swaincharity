@@ -1,5 +1,7 @@
 /**
- * Bottom-bar donation tracker: raised versus goal, plus the day's incentive.
+ * Bottom-bar donation tracker: raised versus goal, plus the day's incentive —
+ * either a fixed reward (optionally with the window's top donor) or the
+ * current leader of one or more bid wars from the Saturday Form responses.
  *
  * Always tracks the team in CONFIG.donationBar, not the site-wide `scope`,
  * though ?scope=&id= still override it for testing against a busy team.
@@ -7,6 +9,9 @@
 import { CONFIG, applyUrlOverrides } from './config.js';
 import { fetchProfile, fetchDonations } from './extralife.js';
 import { aggregate, resolveWindow } from './leaderboard.js';
+import {
+  isIncentivesConfigured, fetchResponses, buildIncentives, findIncentive, bidWarLeader,
+} from './incentives.js';
 import { money, el, clear, setProgress, poll } from './ui.js';
 
 CONFIG.scope = CONFIG.donationBar.scope;
@@ -64,11 +69,49 @@ function renderProgress(profile) {
   setProgress($('fill'), pct);
 }
 
-function renderIncentive(entry, donations) {
+function renderBidWars(entry, model) {
+  const box = $('bidwars');
+  clear(box);
+  for (const { id, label } of entry.bidwars) {
+    box.append(el('span', 'bar__war-label', label || id));
+
+    if (!model) {
+      // No sheet connected (or not loaded yet): point people at chat instead.
+      box.append(el('span', 'bar__war-name bar__war-name--empty', 'Type !bidwar in chat'));
+      box.append(el('span', 'bar__war-amount', ''));
+      continue;
+    }
+
+    const lead = bidWarLeader(findIncentive(model, id));
+    if (!lead) {
+      box.append(el('span', 'bar__war-name bar__war-name--empty', 'No bids yet. Be the first!'));
+      box.append(el('span', 'bar__war-amount', ''));
+      continue;
+    }
+
+    const name = lead.tied
+      ? `Tied: ${lead.tied.map((option) => option.title).join(' / ')}`
+      : lead.option.title;
+    box.append(el('span', 'bar__war-name', name));
+    box.append(el('span', 'bar__war-amount', money(lead.amount)));
+  }
+}
+
+function renderIncentive(entry, donations, model) {
   const section = $('incentive');
-  section.hidden = !entry?.reward;
+  const wars = Boolean(entry?.bidwars?.length);
+  section.hidden = !entry?.reward && !wars;
   $('root').classList.toggle('bar__panel--solo', section.hidden);
   if (section.hidden) return;
+
+  $('reward-row').hidden = wars;
+  $('bidwars').hidden = !wars;
+  if (wars) {
+    $('kicker').textContent = `Day ${entry.day} ${entry.bidwars.length > 1 ? 'Bid Wars' : 'Bid War'}`;
+    $('leader').hidden = true;
+    renderBidWars(entry, model);
+    return;
+  }
 
   $('kicker').textContent = `Day ${entry.day} Incentive`;
   $('incentive-title').textContent = entry.title ?? '';
@@ -98,17 +141,39 @@ function showError(message) {
 
 let loadedOnce = false;
 
+// The sheet changes far less often than donations, so it is re-read on its
+// own slower clock. A failed read keeps the last good copy.
+let sheetCache = null;
+let sheetReadAt = 0;
+
+async function loadSheet() {
+  if (!isIncentivesConfigured()) return null;
+  if (sheetCache && Date.now() - sheetReadAt < CONFIG.poll.sheetSeconds * 1000) return sheetCache;
+  try {
+    sheetCache = await fetchResponses();
+    sheetReadAt = Date.now();
+  } catch (err) {
+    console.error('[bcl bar] sheet', err);
+  }
+  return sheetCache;
+}
+
 async function refresh() {
   const entry = currentIncentive();
   const wantsLeader = Boolean(entry?.reward && entry.leader);
+  const wantsWars = Boolean(entry?.bidwars?.length);
 
-  const [profile, donations] = await Promise.all([
+  const [profile, donations, sheet] = await Promise.all([
     fetchProfile(),
-    wantsLeader ? fetchDonations() : Promise.resolve(null),
+    wantsLeader || wantsWars ? fetchDonations() : Promise.resolve(null),
+    wantsWars ? loadSheet() : Promise.resolve(null),
   ]);
 
+  // Donations are needed to match Form responses to real donations.
+  const model = sheet ? buildIncentives(sheet, donations ?? []) : null;
+
   renderProgress(profile);
-  renderIncentive(entry, donations);
+  renderIncentive(entry, donations, model);
   $('error').hidden = true;
   loadedOnce = true;
 }

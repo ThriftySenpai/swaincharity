@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BCL Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Uncial+Antiqua&display=swap">
+<link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/overlay.css">
+</head>
+<body class="overlay">
+<!--
+  OBS browser-source views. Add a Browser source and point it at, for example:
+
+    overlay.html?view=top5&window=friday-night
+    overlay.html?view=top5&window=alltime&count=3
+    overlay.html?view=total
+    overlay.html?view=bidwar&id=boss-name
+    overlay.html?view=incentive&id=shave-head
+    overlay.html?view=ticker&count=4
+
+  Extras: &scale=1.4 to size the text, &chroma=00b140 for a key colour
+  instead of transparency, &title=Custom%20Heading to override the heading.
+-->
+<div id="root" class="ov"></div>
+<script type="module" src="js/overlay.js"></script>
+</body>
+</html>

@@ -1,18 +1,16 @@
 /**
- * Google Sheets reader.
+ * Google Sheets reader — no API key.
  *
- * Uses the Sheets API v4, which sends permissive CORS headers. The two
- * obvious-looking alternatives do not work from a static page:
- *   - docs.google.com publish-to-web CSV has no Access-Control-Allow-Origin
- *   - script.google.com Apps Script web apps are CORS-blocked
+ * Reads one tab through the gviz CSV endpoint
+ * (docs.google.com/spreadsheets/d/<id>/gviz/tq?tqx=out:csv), the same one the
+ * slideshow's license plate uses. It answers cross-origin requests, so a
+ * static page can read any sheet shared as "Anyone with the link -> Viewer".
  *
- * The API key here is public by necessity. It is restricted to the Sheets API
- * and to an HTTP referrer, and it only ever reads a sheet that is already
- * link-public, so the exposure is limited to read access you already granted.
+ * One gviz quirk to know about: it gives every column a single type, picked
+ * by majority, and blanks the cells that don't fit. A column holding mostly
+ * numbers drops the odd "$25". That's why the Form's amount question should
+ * use number validation — see README.md.
  */
-import { CONFIG } from './config.js';
-
-const API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
 export class SheetError extends Error {
   constructor(message, { status } = {}) {
@@ -22,98 +20,88 @@ export class SheetError extends Error {
   }
 }
 
-/** True when a sheet id and API key have both been filled in. */
-export function isSheetConfigured() {
-  return Boolean(CONFIG.sheet.id && CONFIG.sheet.apiKey);
-}
+/** Parses CSV text, including quoted cells with commas, quotes and newlines. */
+export function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let quoted = false;
 
-function headerKey(header) {
-  return String(header || '')
-    .trim()
-    .replace(/[^A-Za-z0-9]+(.)?/g, (_, chr) => (chr ? chr.toUpperCase() : ''))
-    .replace(/^(.)/, (chr) => chr.toLowerCase());
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (c === '"') {
+        quoted = false;
+      } else {
+        cell += c;
+      }
+    } else if (c === '"') {
+      quoted = true;
+    } else if (c === ',') {
+      row.push(cell);
+      cell = '';
+    } else if (c === '\n' || c === '\r') {
+      if (c === '\r' && text[i + 1] === '\n') i++;
+      row.push(cell);
+      rows.push(row);
+      row = [];
+      cell = '';
+    } else {
+      cell += c;
+    }
+  }
+  if (cell !== '' || row.length) {
+    row.push(cell);
+    rows.push(row);
+  }
+  return rows;
 }
 
 /**
- * Turn a range's raw rows into objects keyed by camel-cased header.
- * Blank rows and rows with no first cell are skipped, which is what you get
- * when a spreadsheet has trailing empty rows.
+ * Reads a tab as `{ headers, rows }`, where each row is an array of trimmed
+ * strings in header order. Fully blank rows are dropped.
  */
-function rowsToObjects(values) {
-  if (!Array.isArray(values) || values.length < 2) return [];
-  const [headerRow, ...dataRows] = values;
-  const keys = headerRow.map(headerKey);
-  return dataRows
-    .filter((row) => Array.isArray(row) && row.some((cell) => String(cell ?? '').trim() !== ''))
-    .map((row) => {
-      const obj = {};
-      keys.forEach((key, i) => {
-        if (key) obj[key] = String(row[i] ?? '').trim();
-      });
-      return obj;
-    });
-}
-
-/**
- * Read every configured tab in one request.
- * Returns `{ incentives, allocations, claims, settings }` as arrays of objects.
- */
-export async function fetchSheet() {
-  if (!isSheetConfigured()) {
-    return { configured: false, incentives: [], allocations: [], claims: [], settings: {} };
-  }
-
-  const { id, apiKey, tabs } = CONFIG.sheet;
-  const url = new URL(`${API_BASE}/${encodeURIComponent(id)}/values:batchGet`);
-  const order = ['incentives', 'allocations', 'claims', 'settings'];
-  for (const name of order) {
-    url.searchParams.append('ranges', `${tabs[name]}!A:Z`);
-  }
-  url.searchParams.set('majorDimension', 'ROWS');
-  url.searchParams.set('key', apiKey);
+export async function fetchTab(sheetId, tab) {
+  const url = new URL(`https://docs.google.com/spreadsheets/d/${encodeURIComponent(sheetId)}/gviz/tq`);
+  url.searchParams.set('tqx', 'out:csv');
+  url.searchParams.set('headers', '1');
+  if (tab) url.searchParams.set('sheet', tab);
+  url.searchParams.set('_', String(Date.now()));
 
   let res;
   try {
-    res = await fetch(url.toString());
+    res = await fetch(url.toString(), { cache: 'no-store' });
   } catch {
     throw new SheetError('Could not reach Google Sheets.');
   }
-
   if (!res.ok) {
-    let detail = '';
-    try {
-      const body = await res.json();
-      detail = body?.error?.message ? ` — ${body.error.message}` : '';
-    } catch {
-      /* fall through to the bare status */
-    }
-    if (res.status === 403) {
-      throw new SheetError(`Sheet access denied${detail}`, { status: 403 });
-    }
-    if (res.status === 404) {
-      throw new SheetError(`Sheet not found${detail}`, { status: 404 });
-    }
-    throw new SheetError(`Google Sheets returned ${res.status}${detail}`, { status: res.status });
+    throw new SheetError(
+      res.status === 400 || res.status === 404
+        ? `Sheet or tab "${tab}" not found`
+        : `Google Sheets returned ${res.status}`,
+      { status: res.status },
+    );
   }
 
-  const body = await res.json();
-  const ranges = body.valueRanges ?? [];
-  const out = { configured: true };
-  order.forEach((name, i) => {
-    out[name] = rowsToObjects(ranges[i]?.values);
-  });
+  const body = await res.text();
+  // A sheet that isn't link-shared answers with a sign-in page, not CSV.
+  if (/^\s*</.test(body)) {
+    throw new SheetError('Sheet is not shared as "Anyone with the link"', { status: 403 });
+  }
 
-  // Settings is a key/value tab, so flatten it into a plain object.
-  out.settings = Object.fromEntries(
-    (out.settings ?? []).filter((r) => r.key).map((r) => [r.key, r.value ?? '']),
-  );
-
-  return out;
+  const [headers = [], ...rest] = parseCsv(body);
+  const rows = rest
+    .map((row) => headers.map((_, i) => String(row[i] ?? '').trim()))
+    .filter((row) => row.some((cell) => cell !== ''));
+  return { headers: headers.map((h) => String(h).trim()), rows };
 }
 
 /** Spreadsheet truthiness: TRUE, yes, y, 1, x, and checkbox TRUE all count. */
 export function isTruthy(value) {
-  return /^(true|yes|y|1|x|approved|done)$/i.test(String(value ?? '').trim());
+  return /^(true|yes|y|1|x|approved|ok|done)$/i.test(String(value ?? '').trim());
 }
 
 /** Parses '$1,234.50' and friends into a number. */
