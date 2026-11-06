@@ -5,7 +5,15 @@
  *   - Baddie League: donors write in their own pick and picks race each other
  *
  * Every Form response is one row: name, amount, party vote, league write-in,
- * plus an `approved` column mods tick by hand. A row counts when:
+ * plus an `approved` column mods tick by hand.
+ *
+ * With CONFIG.saturday.requireApproval on (the default), a row counts only
+ * once a mod ticks `approved`. If its name and amount then match a real
+ * Saturday donation, the donation's own amount is used and that donation
+ * can't back another row; otherwise the typed amount is used.
+ *
+ * With requireApproval off, a row also counts without a tick when it matches
+ * a donation:
  *
  *   1. its name and amount match a real Saturday donation on Extra Life (the
  *      donation's own amount is used, and each donation backs one row), or
@@ -189,6 +197,15 @@ export function buildIncentives(responses, donations = []) {
       continue;
     }
 
+    // With requireApproval on, nothing counts until a mod ticks it, even a
+    // response that matches a donation exactly.
+    const approved = isTruthy(approvedCell);
+    if (cfg.requireApproval !== false && !approved) {
+      stats.pending += 1;
+      pending.push({ name, amount: typed });
+      continue;
+    }
+
     const donation = matchDonation(name, typed);
     let amount = 0;
     let source = '';
@@ -196,7 +213,7 @@ export function buildIncentives(responses, donations = []) {
       used.add(donation.donationID);
       amount = donation.amount;
       source = 'matched';
-    } else if (isTruthy(approvedCell) && typed > 0) {
+    } else if (approved && typed > 0) {
       amount = typed;
       source = 'approved';
     }

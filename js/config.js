@@ -132,10 +132,25 @@ export const CONFIG = {
     // It's the same sheet the slideshow's license plate reads.
     sheetId: '1-jwagBKevlwJJVNBjQ16ZUn_as6ZUqvctSy_cACHsrY',
     tab: 'DonationIncentiveForm',
-    // The Form's own "Send -> link" URL. The site's Vote buttons open it.
-    formUrl: 'https://forms.gle/4XNP7361sWgzQQ1w9',
+    // The Form's full viewform URL (not the forms.gle short link, which
+    // can't carry pre-filled answers). The site's Vote buttons open it.
+    formUrl: 'https://docs.google.com/forms/d/e/1FAIpQLSfgZw0wLHOLIAGuST31IC9FXyLHjEmdNFecSeVTjpsRoRXpiA/viewform',
     // Only donations made inside this stream window can match a response.
     window: 'saturday',
+    // true: no vote counts until a mod ticks `approved`, even one that
+    // matches a donation exactly. false: matching votes count on their own.
+    requireApproval: true,
+
+    // Pre-filled answers for vote.html's buttons. Each `entry.` id comes from
+    // the Form's "Get pre-filled link"; the choice texts must match the
+    // "Which Incentive?" options exactly, or that answer is left blank.
+    prefill: {
+      name: 'entry.1799618009',
+      amount: 'entry.1102454459',
+      incentive: 'entry.1138443792',
+      partyChoice: 'Party Game Bid war',
+      leagueChoice: 'Pick a Baddy League',
+    },
 
     // Each column is found by a word in its header (case does not matter),
     // so the Form questions can be worded freely as long as each contains its
