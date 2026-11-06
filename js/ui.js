@@ -52,6 +52,70 @@ export function clear(node) {
 }
 
 /**
+ * Makes `target`'s children match `source`'s, changing only what differs, so
+ * a refresh with the same results leaves the page untouched: entry animations
+ * don't replay and progress bars glide instead of jumping.
+ *
+ * Elements with a `data-key` are matched by key, so a new ticker row slides
+ * in on its own while the existing rows stay put. Other nodes are matched by
+ * position and tag. `source` is consumed: new nodes are moved out of it.
+ */
+export function morphChildren(target, source) {
+  const keyOf = (node) => (node.nodeType === 1 ? node.dataset.key ?? null : null);
+  const keyed = new Map();
+  for (const child of target.childNodes) {
+    const key = keyOf(child);
+    if (key !== null) keyed.set(key, child);
+  }
+
+  let cursor = target.firstChild;
+  for (const next of [...source.childNodes]) {
+    const key = keyOf(next);
+    let match = null;
+    if (key !== null) {
+      match = keyed.get(key) ?? null;
+      keyed.delete(key);
+    } else if (
+      cursor &&
+      keyOf(cursor) === null &&
+      cursor.nodeType === next.nodeType &&
+      cursor.nodeName === next.nodeName
+    ) {
+      match = cursor;
+    }
+
+    if (!match) {
+      target.insertBefore(next, cursor);
+      continue;
+    }
+    if (match === cursor) cursor = cursor.nextSibling;
+    else target.insertBefore(match, cursor);
+    morphNode(match, next);
+  }
+
+  // Whatever is left after the cursor wasn't wanted.
+  while (cursor) {
+    const after = cursor.nextSibling;
+    target.removeChild(cursor);
+    cursor = after;
+  }
+}
+
+function morphNode(target, source) {
+  if (target.nodeType !== 1) {
+    if (target.nodeValue !== source.nodeValue) target.nodeValue = source.nodeValue;
+    return;
+  }
+  for (const { name, value } of [...source.attributes]) {
+    if (target.getAttribute(name) !== value) target.setAttribute(name, value);
+  }
+  for (const { name } of [...target.attributes]) {
+    if (!source.hasAttribute(name)) target.removeAttribute(name);
+  }
+  morphChildren(target, source);
+}
+
+/**
  * Render a leaderboard into an <ol>.
  * Rows come from leaderboard.aggregate().
  */
