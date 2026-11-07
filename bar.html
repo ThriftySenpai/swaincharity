@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Uncial+Antiqua&display=swap">
 <link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/wars.css">
 <link rel="stylesheet" href="css/bar.css">
 </head>
 <body class="bar">
@@ -21,8 +22,12 @@
 
   The day's incentive is set in js/config.js under `donationBar`: a fixed
   reward, or `bidwars` to show who is leading each bid war in the sheet.
+  On a bid war day the right half takes turns: the leaders summary, then the
+  Party Game VS bar, then the Baddie League top picks (the same panels as
+  bidwar.html; times in `donationBar.summarySeconds` and `bidwarBar`).
   Extras:
     &day=2          force a day instead of picking it from the clock
+    &demo=1         made-up bid war numbers on the VS and league panels
     &chroma=00b140  solid key colour instead of transparency
 -->
 <main class="bar__panel" id="root">
@@ -39,13 +44,18 @@
   </section>
 
   <section class="bar__incentive" id="incentive" hidden aria-label="Today's donation incentive">
-    <div class="bar__kicker" id="kicker"></div>
-    <div class="bar__reward" id="reward-row">
-      <span class="bar__reward-title" id="incentive-title"></span>
-      <span class="bar__reward-name" id="reward"></span>
+    <div class="wars__slide bar__summary is-live" id="slide-summary">
+      <div class="bar__kicker" id="kicker"></div>
+      <div class="bar__reward" id="reward-row">
+        <span class="bar__reward-title" id="incentive-title"></span>
+        <span class="bar__reward-name" id="reward"></span>
+      </div>
+      <div class="bar__leader" id="leader" hidden></div>
+      <div class="bar__bidwars" id="bidwars" hidden></div>
     </div>
-    <div class="bar__leader" id="leader" hidden></div>
-    <div class="bar__bidwars" id="bidwars" hidden></div>
+    <!-- Bid war days only; filled in by js/warpanels.js. -->
+    <div id="slide-party" hidden></div>
+    <div id="slide-league" hidden></div>
   </section>
 </main>
 <div class="bar__error" id="error" hidden></div>

@@ -3,6 +3,10 @@
  * either a fixed reward (optionally with the window's top donor) or the
  * current leader of one or more bid wars from the Saturday Form responses.
  *
+ * On a bid war day the incentive half takes turns: that leaders summary, then
+ * the Party Game VS bar and the Baddie League top picks from js/warpanels.js
+ * (the same panels as bidwar.html).
+ *
  * Always tracks the team in CONFIG.donationBar, not the site-wide `scope`,
  * though ?scope=&id= still override it for testing against a busy team.
  */
@@ -12,6 +16,7 @@ import { aggregate, resolveWindow } from './leaderboard.js';
 import {
   isIncentivesConfigured, fetchResponses, buildIncentives, findIncentive, bidWarLeader,
 } from './incentives.js';
+import { createWarPanels, rotate, demoModel, PARTY_MS, LEAGUE_MS } from './warpanels.js';
 import { money, el, clear, setProgress, poll } from './ui.js';
 
 CONFIG.scope = CONFIG.donationBar.scope;
@@ -20,6 +25,8 @@ applyUrlOverrides();
 
 const params = new URLSearchParams(location.search);
 const $ = (id) => document.getElementById(id);
+const DEMO = params.has('demo');
+const SUMMARY_MS = (CONFIG.donationBar.summarySeconds ?? 10) * 1000;
 
 const chroma = params.get('chroma');
 if (chroma) {
@@ -44,6 +51,30 @@ function currentIncentive() {
     .filter(({ window }) => window.start > now)
     .sort((a, b) => a.window.start - b.window.start)[0];
   return (live ?? upcoming ?? dated.at(-1))?.entry ?? null;
+}
+
+// -------------------------------------------------------------- rotation
+
+// The VS and league panels are only built, and only rotate in, on a day with
+// bid wars. Any other day the summary panel stays up on its own.
+let warPanels = null;
+let stopRotation = null;
+
+function setRotation(on) {
+  if (on === Boolean(stopRotation)) return;
+  $('slide-party').hidden = !on;
+  $('slide-league').hidden = !on;
+  if (!on) {
+    stopRotation();
+    stopRotation = null;
+    return;
+  }
+  warPanels ??= createWarPanels($('slide-party'), $('slide-league'));
+  stopRotation = rotate([
+    { el: $('slide-summary'), ms: SUMMARY_MS },
+    { el: $('slide-party'), ms: PARTY_MS },
+    { el: $('slide-league'), ms: LEAGUE_MS, onShow: warPanels.startLeague },
+  ]);
 }
 
 // ---------------------------------------------------------------- render
@@ -102,6 +133,7 @@ function renderIncentive(entry, donations, model) {
   const wars = Boolean(entry?.bidwars?.length);
   section.hidden = !entry?.reward && !wars;
   $('root').classList.toggle('bar__panel--solo', section.hidden);
+  setRotation(wars);
   if (section.hidden) return;
 
   $('reward-row').hidden = wars;
@@ -110,6 +142,7 @@ function renderIncentive(entry, donations, model) {
     $('kicker').textContent = `Day ${entry.day} ${entry.bidwars.length > 1 ? 'Bid Wars' : 'Bid War'}`;
     $('leader').hidden = true;
     renderBidWars(entry, model);
+    warPanels?.render(DEMO ? demoModel() : model);
     return;
   }
 

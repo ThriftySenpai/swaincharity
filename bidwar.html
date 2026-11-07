@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700;800&family=Uncial+Antiqua&display=swap">
 <link rel="stylesheet" href="css/theme.css">
+<link rel="stylesheet" href="css/wars.css">
 <link rel="stylesheet" href="css/bidwar.css">
 </head>
 <body class="wars">
@@ -32,38 +33,9 @@
     &chroma=00b140  solid key colour instead of transparency
 -->
 <main class="wars__panel" id="root">
-  <section class="wars__slide" id="slide-party" aria-label="Party Game bid war">
-    <div class="wars__kicker">
-      <span id="party-title">Pick a Party Game</span>
-      <span class="wars__total" id="party-total"></span>
-    </div>
-    <div class="vs__names">
-      <div class="vs__side vs__side--left">
-        <span class="vs__name" id="vs-left-name"></span>
-        <span class="vs__amount" id="vs-left-amount"></span>
-      </div>
-      <span class="vs__badge">VS</span>
-      <div class="vs__side vs__side--right">
-        <span class="vs__amount" id="vs-right-amount"></span>
-        <span class="vs__name" id="vs-right-name"></span>
-      </div>
-    </div>
-    <div class="vs__track">
-      <div class="vs__fill vs__fill--left" id="vs-left-fill"></div>
-      <div class="vs__fill vs__fill--right" id="vs-right-fill"></div>
-      <div class="vs__mid"></div>
-    </div>
-  </section>
-
-  <section class="wars__slide" id="slide-league" aria-label="Pick a Baddie League bid war">
-    <div class="wars__kicker">
-      <span id="league-title">Pick a Baddie League</span>
-      <span class="wars__total" id="league-total"></span>
-    </div>
-    <div class="league__viewport" id="league-viewport">
-      <ol class="league" id="league-list"></ol>
-    </div>
-  </section>
+  <!-- Filled in by js/warpanels.js. -->
+  <section id="slide-party" aria-label="Party Game bid war"></section>
+  <section id="slide-league" aria-label="Pick a Baddie League bid war"></section>
 </main>
 <script type="module" src="js/bidwar.js"></script>
 </body>

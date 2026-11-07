@@ -48,6 +48,11 @@ export const CONFIG = {
     scope: 'teams',
     id: 74893, // Team Swain, Extra Life 2026
 
+    // On a bid war day the incentive half rotates: this summary of the
+    // leaders, then the Party Game VS bar and the Baddie League top picks
+    // (their times are `partySeconds` / `leagueSeconds` in `bidwarBar`).
+    summarySeconds: 10,
+
     // One entry per stream day. The bar shows the day whose `window` is
     // happening now, else the next one coming up, else the last one. Force a
     // day with bar.html?day=2. Leave `reward` blank to hide the incentive and
@@ -193,8 +198,9 @@ export const CONFIG = {
       title: 'Pick a Party Game',
       choice: ['party'],
       // `match` is extra words that count as a vote, on top of the title.
+      // `short` is used on the VS bar where the full title doesn't fit.
       options: [
-        { id: 'party-hk',      title: 'Hello Kitty Party Land', match: ['hello kitty', 'kitty', 'hk'] },
+        { id: 'party-hk',      title: 'Hello Kitty Party Land', short: 'Hello Kitty', match: ['hello kitty', 'kitty', 'hk'] },
         { id: 'party-machine', title: 'Machine Party',          match: ['machine'] },
       ],
     },
