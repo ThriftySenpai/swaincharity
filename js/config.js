@@ -94,7 +94,7 @@ export const CONFIG = {
       { file: 'bcl-2026-sun-schedule.png', days: [0] },
       { file: 'bcl-2026-saturday_bidwar-pick.png', days: [6] },
       { file: 'bcl-2026-saturday_bidwar-party.png', days: [6] },
-      { file: 'top-donor-license-plate-blank.png', plate: true },
+      // { file: 'top-donor-license-plate-blank.png', plate: true },
     ],
 
     // The plate text is read live from a link-shared Google Sheet through the
