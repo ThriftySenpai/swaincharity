@@ -72,6 +72,14 @@ export const CONFIG = {
     ],
   },
 
+  // ---- Bottom-bar bid war rotator (bidwar.html) --------------------------
+  // Sits right of bar.html and takes turns showing the Party Game VS bar and
+  // the top Baddie League write-ins, from the `saturday` Form tally below.
+  bidwarBar: {
+    seconds: 12,   // time on each panel
+    leagueTop: 3,  // league rows shown: 2 or 3
+  },
+
   // ---- Between-games slideshow (slides.html) ----------------------------
   // Full-screen OBS source that rotates through assets/img/Slides. Browsers
   // can't list a folder, so every slide is named here, in the order shown.
