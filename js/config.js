@@ -92,7 +92,6 @@ export const CONFIG = {
       { file: 'bcl-2026-fri-schedule.png', days: [5] },
       { file: 'bcl-2026-sat-schedule.png', days: [6] },
       { file: 'bcl-2026-sun-schedule.png', days: [0] },
-      { file: 'bcl-2026-saturday.png', days: [6] },
       { file: 'bcl-2026-saturday_bidwar-pick.png', days: [6] },
       { file: 'bcl-2026-saturday_bidwar-party.png', days: [6] },
       { file: 'top-donor-license-plate-blank.png', plate: true },
