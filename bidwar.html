@@ -27,7 +27,7 @@
   only mod-approved votes count. Settings are in js/config.js under
   `bidwarBar`. Extras:
     &only=party     show one panel only (party or league), no rotation
-    &seconds=15     time on each panel
+    &seconds=15     same time on both panels (normally 10s party, 20s league)
     &demo=1         made-up numbers, for lining it up in OBS
     &chroma=00b140  solid key colour instead of transparency
 -->
@@ -60,7 +60,9 @@
       <span id="league-title">Pick a Baddie League</span>
       <span class="wars__total" id="league-total"></span>
     </div>
-    <ol class="league" id="league-list"></ol>
+    <div class="league__viewport" id="league-viewport">
+      <ol class="league" id="league-list"></ol>
+    </div>
   </section>
 </main>
 <script type="module" src="js/bidwar.js"></script>

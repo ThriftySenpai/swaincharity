@@ -35,20 +35,68 @@ const only = params.get('only');
 const order = slides[only] ? [only] : ['party', 'league'];
 for (const [key, slide] of Object.entries(slides)) slide.hidden = !order.includes(key);
 
-const seconds = Math.max(4, Number(params.get('seconds')) || SETTINGS.seconds || 12);
+// Each panel has its own time on screen; ?seconds= sets both at once.
+const forcedSeconds = Number(params.get('seconds'));
+const durationMs = (key) => {
+  const configured = { party: SETTINGS.partySeconds ?? 10, league: SETTINGS.leagueSeconds ?? 20 }[key];
+  return Math.max(4, forcedSeconds || configured) * 1000;
+};
 let current = 0;
+let rotateTimer = null;
 
 function show(index) {
   current = index % order.length;
-  order.forEach((key, i) => slides[key].classList.toggle('is-live', i === current));
+  const key = order[current];
+  order.forEach((k, i) => slides[k].classList.toggle('is-live', i === current));
+  if (key === 'league') startLeagueScroll();
+
+  // With one panel only, this re-runs the same panel, which replays the
+  // league's hold-and-scroll on its own clock.
+  clearTimeout(rotateTimer);
+  rotateTimer = setTimeout(() => show(current + 1), durationMs(key));
+}
+
+// ---- league scroll ---------------------------------------------------------
+// The league panel shows LEAGUE_VISIBLE rows. With more picks than that, it
+// holds on the top rows, slides down to reveal the rest, holds briefly, then
+// slides back so it always leaves on the leaders.
+
+const LEAGUE_TOP = Math.min(6, Math.max(1, SETTINGS.leagueTop || 6));
+const LEAGUE_VISIBLE = 3;
+const PAUSE_MS = (SETTINGS.leaguePauseSeconds ?? 8) * 1000;
+const HOLD_MS = (SETTINGS.leagueHoldSeconds ?? 7) * 1000;
+const SLIDE_MS = 1400; // matches the .league transition in bidwar.css
+
+const viewport = $('league-viewport');
+let leagueCount = 0;
+let scrolled = false;
+let scrollTimers = [];
+
+const extraRows = () => Math.max(0, leagueCount - LEAGUE_VISIBLE);
+
+function setScroll(rows) {
+  viewport.style.setProperty('--scroll', String(rows));
+}
+
+function startLeagueScroll() {
+  scrollTimers.forEach(clearTimeout);
+  scrolled = false;
+  setScroll(0);
+  scrollTimers = [
+    setTimeout(() => {
+      scrolled = true;
+      setScroll(extraRows());
+    }, PAUSE_MS),
+    setTimeout(() => {
+      scrolled = false;
+      setScroll(0);
+    }, PAUSE_MS + SLIDE_MS + HOLD_MS),
+  ];
 }
 
 show(0);
-if (order.length > 1) setInterval(() => show(current + 1), seconds * 1000);
 
 // ---------------------------------------------------------------- render
-
-const LEAGUE_TOP = Math.min(3, Math.max(1, SETTINGS.leagueTop || 3));
 
 $('party-title').textContent = SAT.party.title;
 $('league-title').textContent = SAT.league.title;
@@ -83,6 +131,11 @@ function renderLeague(war) {
   const rows = (war?.children ?? []).filter((c) => c.raised > 0).slice(0, LEAGUE_TOP);
   $('league-total').textContent = war?.raised > 0 ? `${money(war.raised)} pledged` : '';
 
+  leagueCount = rows.length;
+  viewport.classList.toggle('is-scrolling', rows.length > LEAGUE_VISIBLE);
+  // A refresh mid-scroll keeps the list scrolled to the (new) bottom.
+  setScroll(scrolled ? extraRows() : 0);
+
   if (!rows.length) {
     list.className = 'league';
     clear(list);
@@ -90,8 +143,8 @@ function renderLeague(war) {
     return;
   }
 
-  // Three rows only fit at the smaller size; two get the roomier one.
-  list.className = `league league--${rows.length === 3 ? 3 : 2}`;
+  // Three rows only fit at the smaller size; one or two get the roomier one.
+  list.className = `league league--${rows.length >= 3 ? 3 : 2}`;
   const lead = rows[0].raised;
   const next = document.createElement('ol');
   rows.forEach((row, i) => {
@@ -130,6 +183,9 @@ function demoModel() {
       node('a', 'Zoe, Neeko, Lux & friends', 220 + wobble()),
       node('b', 'All Yordles', 150 + wobble()),
       node('c', 'Shadow Isles Only', 95 + wobble()),
+      node('d', 'Monster Hunter: Wilds', 60 + wobble()),
+      node('e', 'Bilgewater Pirates', 25 + wobble()),
+      node('f', 'Mahjong', 10 + wobble() / 4),
     ].sort((a, b) => b.raised - a.raised),
   };
   league.raised = league.children.reduce((s, c) => s + c.raised, 0);

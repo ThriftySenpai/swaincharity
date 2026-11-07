@@ -76,8 +76,15 @@ export const CONFIG = {
   // Sits right of bar.html and takes turns showing the Party Game VS bar and
   // the top Baddie League write-ins, from the `saturday` Form tally below.
   bidwarBar: {
-    seconds: 12,   // time on each panel
-    leagueTop: 3,  // league rows shown: 2 or 3
+    partySeconds: 10,   // time on the Party Game VS panel
+    leagueSeconds: 20,  // time on the Baddie League panel
+    // The league panel shows 3 rows at a time. With more picks than that (up
+    // to `leagueTop`, max 6), it holds on the top 3 for `leaguePauseSeconds`,
+    // slides down to show the rest for `leagueHoldSeconds`, then slides back
+    // up. Pause + hold + ~3s of sliding should fit inside `leagueSeconds`.
+    leagueTop: 6,
+    leaguePauseSeconds: 8,
+    leagueHoldSeconds: 7,
   },
 
   // ---- Between-games slideshow (slides.html) ----------------------------
