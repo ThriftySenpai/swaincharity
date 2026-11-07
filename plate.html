@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BCL Mini Plate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=block">
+<link rel="stylesheet" href="css/plate.css">
+</head>
+<body>
+<!--
+  Mini license plate showing the top donor's plate text, live.
+
+  In OBS add a Browser source pointing at plate.html, sized 2:1 — for
+  example 300 x 150 — and place it anywhere. The plate scales to fit the
+  source and keeps its shape; the rest of the source stays transparent.
+
+  The text comes from the same sheet cell as the slideshow's plate slide,
+  set in js/config.js under `slideshow.plate`, and is re-read every
+  `refreshSeconds`. The plate hides itself while that cell is blank.
+  Extras:
+    ?chroma=00b140  solid key colour instead of transparency
+-->
+<main class="plate" id="plate" hidden aria-label="Top donor license plate">
+  <span class="plate__area"><span class="plate__text" id="plate-text"></span></span>
+</main>
+<script type="module" src="js/plate-view.js"></script>
+</body>
+</html>

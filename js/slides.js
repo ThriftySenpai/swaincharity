@@ -6,6 +6,7 @@
  * license-plate text from the Google Sheet onto the plate slide.
  */
 import { CONFIG } from './config.js';
+import { fetchPlateText, loadPlateFont } from './plate.js';
 
 const SHOW = CONFIG.slideshow;
 const params = new URLSearchParams(window.location.search);
@@ -113,32 +114,10 @@ function fitPlate() {
   }
 }
 
-/** Reads one cell of a CSV row: strips the quotes and un-doubles "" escapes. */
-function parseCsvCell(csv) {
-  const line = csv.trim();
-  if (line.startsWith('"')) {
-    const end = line.lastIndexOf('"');
-    return line.slice(1, end > 0 ? end : undefined).replace(/""/g, '"');
-  }
-  return line.split(',')[0] ?? '';
-}
-
 async function refreshPlate() {
   if (!plateText || !PLATE?.sheetId) return;
-  const url = new URL(`https://docs.google.com/spreadsheets/d/${PLATE.sheetId}/gviz/tq`);
-  url.searchParams.set('tqx', 'out:csv');
-  url.searchParams.set('headers', '0');
-  url.searchParams.set('sheet', PLATE.tab);
-  url.searchParams.set('range', PLATE.cell);
-  url.searchParams.set('_', String(Date.now()));
-
   try {
-    const res = await fetch(url.toString(), { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const body = await res.text();
-    // A sheet that isn't link-shared answers with a sign-in page, not CSV.
-    if (/^\s*</.test(body)) throw new Error('sheet is not shared publicly');
-    const text = parseCsvCell(body).trim();
+    const text = await fetchPlateText(PLATE);
     if (text !== plateText.textContent) {
       plateText.textContent = text;
       fitPlate();
@@ -149,19 +128,8 @@ async function refreshPlate() {
   }
 }
 
-async function loadPlateFont() {
-  if (!PLATE?.font) return;
-  try {
-    const face = new FontFace('BCL Plate', `url("${PLATE.font}")`);
-    document.fonts.add(await face.load());
-    stage.style.setProperty('--plate-font', "'BCL Plate'");
-  } catch (err) {
-    console.warn('License plate font could not be loaded:', err.message);
-  }
-}
-
 if (plateText) {
-  loadPlateFont().then(() => document.fonts.ready).then(fitPlate);
+  loadPlateFont(PLATE, stage).then(() => document.fonts.ready).then(fitPlate);
   refreshPlate();
   setInterval(refreshPlate, (PLATE.refreshSeconds || 30) * 1000);
 }

@@ -1,0 +1,71 @@
+/*
+ * Mini license plate (plate.html).
+ *
+ * The plate art is cropped from the slideshow's plate slide
+ * (assets/img/plate-mini.png, 2:1). The plate is 20rem x 10rem, and the root
+ * size is whichever of the source's width or height is tighter, so it fills
+ * a 2:1 source exactly and keeps its shape in any other.
+ */
+html {
+  font-size: min(calc(100vw / 20), calc(100vh / 10));
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: transparent;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.plate {
+  position: relative;
+  width: 20rem;
+  height: 10rem;
+  /* Rounded to match the real plate's corners; the 1rem-ish radius also
+     trims the scrap of slide background left in the crop's corners. */
+  border-radius: 0.8rem;
+  background: #f2f2ef url('../assets/img/plate-mini.png') center / 100% 100% no-repeat;
+}
+
+.plate[hidden] {
+  display: none;
+}
+
+/* The blank stamping area, between the blue rule and "America's Dairyland"
+   (24% to 81% of the height) and clear of the bolt holes at either side. */
+.plate__area {
+  position: absolute;
+  top: 24%;
+  bottom: 19%;
+  left: 5%;
+  right: 5%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.plate__text {
+  flex: 0 0 auto;
+  font-family: var(--plate-font, 'Oswald'), 'Oswald', 'Arial Narrow', sans-serif;
+  font-weight: 500;
+  font-size: 4.9rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  white-space: pre;
+  text-transform: uppercase;
+  color: #1d2a5c;
+  /* Stamped metal, scaled down from the slideshow plate. */
+  text-shadow:
+    -0.06rem -0.06rem 0 rgba(255, 255, 255, 0.85),
+    0.09rem 0.12rem 0 rgba(12, 18, 44, 0.35),
+    0.15rem 0.24rem 0.3rem rgba(0, 0, 0, 0.18);
+}
