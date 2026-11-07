@@ -2,11 +2,20 @@
  * Between-games slideshow (slides.html).
  *
  * Rotates the images listed in CONFIG.slideshow.slides, skipping any slide
- * whose `days` don't include today's stream day, and prints the top donor's
- * license-plate text from the Google Sheet onto the plate slide.
+ * whose `days` don't include today's stream day, prints the top donor's
+ * license-plate text from the Google Sheet onto the plate slide, and lays a
+ * live top-N leaderboard over any slide with a `bidwar` id.
  */
 import { CONFIG } from './config.js';
 import { fetchPlateText, loadPlateFont } from './plate.js';
+import { fetchDonations } from './extralife.js';
+import { isIncentivesConfigured, loadIncentives, findIncentive } from './incentives.js';
+import { money, el as make, clear, poll } from './ui.js';
+
+// Bid war votes are matched against the whole team's donations, the same as
+// the bottom bar, not the site-wide `scope`.
+CONFIG.scope = CONFIG.donationBar.scope;
+CONFIG.id = CONFIG.donationBar.id;
 
 const SHOW = CONFIG.slideshow;
 const params = new URLSearchParams(window.location.search);
@@ -50,6 +59,52 @@ function isEligible(slide, day) {
   return !Array.isArray(slide.days) || slide.days.includes(day);
 }
 
+// ---- Bid war leaderboard ----------------------------------------------------
+const BOARD_SIZE = SHOW.bidwarTop || 5;
+const DEMO = params.get('demo') === '1';
+
+/** The empty panel; rows are filled in by renderBoard(). */
+function buildBoard() {
+  const root = make('div', 'board');
+  root.append(make('p', 'board__kicker', `Leaderboard`));
+  const list = make('ol', 'board__list');
+  root.append(list);
+  return { root, list };
+}
+
+/** Fills one board from a bid war node built by incentives.js. */
+function renderBoard(board, war) {
+  const picks = (war?.children ?? []).filter((c) => c.raised > 0).slice(0, BOARD_SIZE);
+  clear(board.list);
+  board.root.classList.toggle('board--empty', !picks.length);
+
+  if (!picks.length) {
+    board.list.append(make('li', 'board__empty', 'No candidates yet. Be the first!'));
+  }
+  const top = picks[0]?.raised || 1;
+  picks.forEach((pick, i) => {
+    const row = make('li', 'board__row');
+    row.style.setProperty('--share', `${Math.max(4, (pick.raised / top) * 100)}%`);
+    // Equal totals share a rank, so a tie for first shows two #1s.
+    const rank = i > 0 && pick.raised === picks[i - 1].raised
+      ? board.list.lastElementChild.dataset.rank
+      : String(i + 1);
+    row.dataset.rank = rank;
+    row.append(
+      make('span', 'board__rank', rank),
+      make('span', 'board__name', pick.title),
+      make('span', 'board__amount', money(pick.raised)),
+    );
+    board.list.append(row);
+  });
+}
+
+/** Made-up standings for ?demo=1, to check the layout before votes come in. */
+function demoWar() {
+  const names = ['Sauron', 'The Witch-king of Angmar', 'Saruman the White', 'Shelob', 'Gollum', 'Smaug'];
+  return { children: names.map((title, i) => ({ title, raised: [250, 175, 175, 60, 25, 10][i] })) };
+}
+
 // ---- Build the slides ------------------------------------------------------
 let plateText = null;
 
@@ -71,8 +126,14 @@ const slides = SHOW.slides.map((slide) => {
     el.append(plate);
   }
 
+  let board = null;
+  if (slide.bidwar) {
+    board = buildBoard();
+    el.append(board.root);
+  }
+
   stage.append(el);
-  return { ...slide, el };
+  return { ...slide, el, board };
 });
 
 // ---- Rotation ---------------------------------------------------------------
@@ -132,4 +193,38 @@ if (plateText) {
   loadPlateFont(PLATE, stage).then(() => document.fonts.ready).then(fitPlate);
   refreshPlate();
   setInterval(refreshPlate, (PLATE.refreshSeconds || 30) * 1000);
+}
+
+// ---- Bid war leaderboards ---------------------------------------------------
+const boardSlides = slides.filter((s) => s.board);
+
+async function refreshBoards() {
+  // Only read the sheet on days a leaderboard slide is actually in rotation.
+  const day = streamDay();
+  const live = boardSlides.filter((s) => isEligible(s, day));
+  if (!live.length) return;
+
+  if (DEMO) {
+    for (const s of live) renderBoard(s.board, demoWar());
+    return;
+  }
+  if (!isIncentivesConfigured()) return;
+
+  // Donations let incentives.js swap a vote's typed amount for the real one.
+  // A failed read keeps the last good standings on screen.
+  try {
+    const donations = await fetchDonations().catch((err) => {
+      console.warn('Donations could not be read; using typed amounts:', err.message);
+      return [];
+    });
+    const model = await loadIncentives(donations);
+    for (const s of live) renderBoard(s.board, findIncentive(model, s.bidwar));
+  } catch (err) {
+    console.warn('Bid war standings could not be read:', err.message);
+  }
+}
+
+if (boardSlides.length) {
+  for (const s of boardSlides) renderBoard(s.board, null);
+  poll(refreshBoards, Math.max(20, CONFIG.poll.sheetSeconds));
 }

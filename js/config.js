@@ -92,10 +92,17 @@ export const CONFIG = {
       { file: 'bcl-2026-fri-schedule.png', days: [5] },
       { file: 'bcl-2026-sat-schedule.png', days: [6] },
       { file: 'bcl-2026-sun-schedule.png', days: [0] },
-      { file: 'bcl-2026-saturday_bidwar-pick.png', days: [6] },
+      // `bidwar` overlays a live leaderboard of that bid war (an id from
+      // `saturday` below) in the middle of the slide.
+      { file: 'bcl-2026-saturday_bidwar-pick.png', days: [6], bidwar: 'league' },
       { file: 'bcl-2026-saturday_bidwar-party.png', days: [6] },
       // { file: 'top-donor-license-plate-blank.png', plate: true },
     ],
+
+    // How many rows a `bidwar` slide's leaderboard shows. Its totals are the
+    // same Saturday Form tally the bottom bar uses, so only mod-approved
+    // votes count.
+    bidwarTop: 5,
 
     // The plate text is read live from a link-shared Google Sheet through the
     // gviz CSV endpoint, which needs no API key. Note the text sits in B1:
