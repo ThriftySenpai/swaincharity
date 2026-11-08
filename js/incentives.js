@@ -137,9 +137,11 @@ export function buildIncentives(responses, donations = []) {
 
   // ---- Saturday donations, for matching ---------------------------------
   const window = resolveWindow(cfg.window);
-  const pool = donations.filter(
-    (d) => typeof d.amount === 'number' && d.displayName && inWindow(d, window),
-  );
+  // Oldest first, so a vote claims the earliest unused donation when a donor
+  // gave the same amount more than once (Extra Life lists newest first).
+  const pool = donations
+    .filter((d) => typeof d.amount === 'number' && d.displayName && inWindow(d, window))
+    .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
   const used = new Set();
 
   /** An unused Saturday donation with this name and amount, if exactly one fits. */
